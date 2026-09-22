@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import type { Reporte } from "@/lib/types"
+import type { Reporte, ReporteMapa } from "@/lib/types"
 import {
   Table,
   TableBody,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Check, X } from "lucide-react"
+import { ReporteMap } from "@/components/reporte-map"
 
 // Datos en vivo — no se debe congelar en el build.
 export const dynamic = "force-dynamic"
@@ -30,6 +31,14 @@ export default async function ReportesPage() {
 
   const reportes = (data ?? []) as Reporte[]
 
+  // Para el mapa sí usamos mapa_reportes: ya viene filtrada a solo los
+  // reportes con coordenadas, que es justo lo que un mapa necesita.
+  const { data: reportesMapaData, error: errorMapa } = await supabaseAdmin
+    .from("mapa_reportes")
+    .select("*")
+
+  const reportesMapa = (reportesMapaData ?? []) as ReporteMapa[]
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -38,6 +47,14 @@ export default async function ReportesPage() {
           Tiraderos clandestinos reportados por la comunidad
         </p>
       </div>
+
+      {errorMapa ? (
+        <p className="text-sm text-destructive">
+          No se pudo cargar el mapa: {errorMapa.message}
+        </p>
+      ) : (
+        <ReporteMap reportes={reportesMapa} />
+      )}
 
       {error ? (
         <p className="text-sm text-destructive">

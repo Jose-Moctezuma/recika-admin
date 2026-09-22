@@ -32,6 +32,19 @@ export interface CentroAcopio {
   estado: string
 }
 
+// Vista mapa_reportes: solo reportes con coordenadas (excluye los remotos
+// sin GPS) y sin foto_url/como_se_entero/desde_sitio (no están en la vista).
+export interface ReporteMapa {
+  id: string
+  lat: number
+  lng: number
+  colonia: string
+  tipo_residuo: string
+  urgencia: 'alta' | 'media' | 'baja'
+  estado: string
+  created_at: string
+}
+
 export interface RankingColonia {
   colonia: string
   total_reportes: number
