@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { NavSidebar } from "@/components/nav-sidebar";
+import { ConditionalNav } from "@/components/conditional-nav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex h-full min-h-screen" style={{ backgroundColor: "#F7F6F2" }}>
-        <NavSidebar />
+        <ConditionalNav />
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </body>
     </html>
