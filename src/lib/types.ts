@@ -52,3 +52,13 @@ export interface RankingColonia {
   // La vista ranking_colonias expone "urgentes", no "urgencia_alta".
   urgentes: number
 }
+
+export interface Leccion {
+  id: string
+  titulo: string
+  contenido: string | null
+  categoria: string | null
+  duracion_min: number
+  orden: number
+  activa: boolean
+}

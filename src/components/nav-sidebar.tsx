@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, MapPin, Building2, Leaf } from "lucide-react"
+import { LayoutDashboard, MapPin, Building2, Leaf, BookOpen } from "lucide-react"
 import { cn } from "cn"
 
 const LINKS = [
@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/reportes", label: "Reportes", icon: MapPin },
   { href: "/colonias", label: "Colonias", icon: Building2 },
   { href: "/acopios", label: "Acopios", icon: Leaf },
+  { href: "/lecciones", label: "Lecciones", icon: BookOpen },
 ] as const
 
 export function NavSidebar() {
