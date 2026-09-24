@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 import type { CentroAcopio } from "@/lib/types"
 import {
   Table,
@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 export const dynamic = "force-dynamic"
 
 export default async function AcopiosPage() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("centros_acopio")
     .select("*")
     .order("nombre")
