@@ -22,15 +22,16 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // La app móvil usa sesiones anónimas en este mismo proyecto Supabase: un
-  // usuario anónimo tiene JWT válido, pero no es un administrador.
-  const autenticado = !!user && !user.is_anonymous;
+  // Tener sesión no basta: la app móvil usa sesiones anónimas en este mismo
+  // proyecto y el registro por correo está abierto. Solo entra quien tenga
+  // app_metadata.is_admin (que ningún usuario puede modificarse a sí mismo).
+  const esAdmin = user?.app_metadata?.is_admin === true;
 
   const isLoginPage = request.nextUrl.pathname === "/login";
-  if (!autenticado && !isLoginPage) {
+  if (!esAdmin && !isLoginPage) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  if (autenticado && isLoginPage) {
+  if (esAdmin && isLoginPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
   return response;

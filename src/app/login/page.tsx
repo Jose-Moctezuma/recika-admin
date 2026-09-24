@@ -16,9 +16,15 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     const supabase = supabaseBrowser();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError("Credenciales incorrectas");
+      setLoading(false);
+    } else if (data.user.app_metadata?.is_admin !== true) {
+      // Cuenta válida pero sin permiso: el proxy la devolvería a /login sin
+      // explicación, así que se cierra la sesión y se avisa aquí.
+      await supabase.auth.signOut();
+      setError("Esta cuenta no tiene permisos de administrador");
       setLoading(false);
     } else {
       router.push("/");
