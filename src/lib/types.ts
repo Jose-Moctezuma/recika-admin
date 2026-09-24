@@ -9,6 +9,10 @@ export interface Reporte {
   foto_url: string | null
   como_se_entero: string | null
   desde_sitio: boolean
+  // Texto libre del ciudadano (migración 0006). Solo lo ve el panel: no está en las
+  // vistas públicas ni en la app de otros usuarios. Opcionales: sin la 0006 no existen.
+  descripcion?: string | null
+  referencia_lugar?: string | null
   estado: string
   created_at: string
 }

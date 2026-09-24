@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Check, X } from "lucide-react"
 import { ReporteMap } from "@/components/reporte-map"
 import { ExportarCsv } from "@/components/exportar-csv"
+import { DetalleReporte } from "@/components/detalle-reporte"
 
 // Datos en vivo — no se debe congelar en el build.
 export const dynamic = "force-dynamic"
@@ -85,6 +86,7 @@ export default async function ReportesPage() {
                 <TableHead>Tipo de residuo</TableHead>
                 <TableHead>Urgencia</TableHead>
                 <TableHead>Desde sitio</TableHead>
+                <TableHead className="text-right">Detalle</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,6 +117,26 @@ export default async function ReportesPage() {
                       ) : (
                         <X className="h-4 w-4 text-muted-foreground" />
                       )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DetalleReporte
+                        reporte={{
+                          fecha: new Date(reporte.created_at).toLocaleString("es-MX", {
+                            dateStyle: "long",
+                            timeStyle: "short",
+                            timeZone: "America/Cancun",
+                          }),
+                          colonia: reporte.colonia ?? null,
+                          tipoResiduo: reporte.tipo_residuo ?? null,
+                          urgencia: urgencia.label,
+                          desdeSitio: reporte.desde_sitio,
+                          lat: reporte.lat,
+                          lng: reporte.lng,
+                          estado: reporte.estado,
+                          descripcion: reporte.descripcion ?? null,
+                          referenciaLugar: reporte.referencia_lugar ?? null,
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 )

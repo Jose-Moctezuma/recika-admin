@@ -4,7 +4,17 @@ import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Reporte } from "@/lib/types"
 
-const COLUMNAS = ["fecha", "colonia", "tipo_residuo", "urgencia", "desde_sitio", "lat", "lng"] as const
+const COLUMNAS = [
+  "fecha",
+  "colonia",
+  "tipo_residuo",
+  "urgencia",
+  "desde_sitio",
+  "lat",
+  "lng",
+  "descripcion",
+  "referencia_lugar",
+] as const
 
 // Los textos vienen de reportes ciudadanos (la app acepta sesiones anónimas):
 // un valor que empiece con = + - @ se ejecutaría como fórmula al abrir el CSV
@@ -25,6 +35,9 @@ function construirCsv(reportes: Reporte[]): string {
       String(r.desde_sitio),
       r.lat === null ? "" : String(r.lat),
       r.lng === null ? "" : String(r.lng),
+      // Texto libre del ciudadano: pasa por celdaTexto (protección anti-fórmulas y comillas).
+      celdaTexto(r.descripcion ?? null),
+      celdaTexto(r.referencia_lugar ?? null),
     ].join(",")
   )
   return [COLUMNAS.join(","), ...filas].join("\r\n")
