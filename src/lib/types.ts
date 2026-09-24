@@ -1,7 +1,8 @@
 export interface Reporte {
   id: string
-  lat: number
-  lng: number
+  // null en los reportes remotos (sin GPS).
+  lat: number | null
+  lng: number | null
   colonia: string
   tipo_residuo: string
   urgencia: 'alta' | 'media' | 'baja'

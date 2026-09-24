@@ -1,7 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import type { ReporteMapa } from "@/lib/types"
+import type { CentroAcopio, ReporteMapa } from "@/lib/types"
 
 // Leaflet toca `window` al importarse, lo que rompe el render en servidor
 // aunque este archivo sea 'use client' (Next igual lo renderiza en servidor
@@ -22,6 +22,12 @@ const ReporteMapInner = dynamic(
   }
 )
 
-export function ReporteMap({ reportes }: { reportes: ReporteMapa[] }) {
-  return <ReporteMapInner reportes={reportes} />
+export function ReporteMap({
+  reportes,
+  acopios,
+}: {
+  reportes: ReporteMapa[]
+  acopios: CentroAcopio[]
+}) {
+  return <ReporteMapInner reportes={reportes} acopios={acopios} />
 }
