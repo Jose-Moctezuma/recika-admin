@@ -14,6 +14,8 @@ const COLUMNAS = [
   "lng",
   "descripcion",
   "referencia_lugar",
+  "estado",
+  "motivo_descarte",
 ] as const
 
 // Los textos vienen de reportes ciudadanos (la app acepta sesiones anónimas):
@@ -38,6 +40,9 @@ function construirCsv(reportes: Reporte[]): string {
       // Texto libre del ciudadano: pasa por celdaTexto (protección anti-fórmulas y comillas).
       celdaTexto(r.descripcion ?? null),
       celdaTexto(r.referencia_lugar ?? null),
+      // Nunca se incluye user_id: el CSV es para el estudio, no para identificar a nadie.
+      celdaTexto(r.estado),
+      celdaTexto(r.motivo_descarte ?? null),
     ].join(",")
   )
   return [COLUMNAS.join(","), ...filas].join("\r\n")

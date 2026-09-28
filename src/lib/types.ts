@@ -1,3 +1,7 @@
+// Motivo obligatorio cuando estado = 'descartado' (CHECK de la migración 0008); nulo en cualquier
+// otro estado.
+export type MotivoDescarte = 'falso' | 'duplicado' | 'prueba'
+
 export interface Reporte {
   id: string
   // null en los reportes remotos (sin GPS).
@@ -5,6 +9,7 @@ export interface Reporte {
   lng: number | null
   colonia: string
   tipo_residuo: string
+  tiempo_estimado: string | null
   urgencia: 'alta' | 'media' | 'baja'
   foto_url: string | null
   como_se_entero: string | null
@@ -13,7 +18,14 @@ export interface Reporte {
   // vistas públicas ni en la app de otros usuarios. Opcionales: sin la 0006 no existen.
   descripcion?: string | null
   referencia_lugar?: string | null
+  // 'pendiente' | 'atendido' | 'descartado' (CHECK de la migración 0008). Antes de esa migración
+  // el valor podía ser cualquier texto libre; se deja como string por si el panel corre contra
+  // una base sin 0008 todavía (los botones de moderación simplemente no encontrarían nada que
+  // igualar y no harían nada raro).
   estado: string
+  motivo_descarte?: MotivoDescarte | null
+  estado_actualizado_at?: string | null
+  estado_actualizado_por?: string | null
   created_at: string
 }
 
@@ -34,7 +46,13 @@ export interface CentroAcopio {
   lng: number
   tipos_material: string[]
   horario: string
+  // 'activo' | 'sin_servicio' | 'inactivo' (migración 0008). 'inactivo' nunca llega a la app
+  // (centros_acopio_publico lo excluye); 'sin_servicio' sí, con su etiqueta gris.
   estado: string
+  // Solo panel (verificación en campo, etapa 1 de la metodología): nunca están en
+  // centros_acopio_publico, la vista que usa la app. Opcionales: sin la 0008 no existen.
+  verificado_en_campo?: string | null
+  notas_verificacion?: string | null
 }
 
 // Vista mapa_reportes: solo reportes con coordenadas (excluye los remotos

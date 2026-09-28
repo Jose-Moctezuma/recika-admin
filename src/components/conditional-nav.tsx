@@ -3,8 +3,8 @@
 import { usePathname } from "next/navigation";
 import { NavSidebar } from "@/components/nav-sidebar";
 
-export function ConditionalNav() {
+export function ConditionalNav({ reportesPendientes }: { reportesPendientes: number | null }) {
   const pathname = usePathname();
   if (pathname === "/login") return null;
-  return <NavSidebar />;
+  return <NavSidebar reportesPendientes={reportesPendientes} />;
 }

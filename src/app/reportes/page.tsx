@@ -1,150 +1,43 @@
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import type { CentroAcopio, Reporte, ReporteMapa } from "@/lib/types"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Check, X } from "lucide-react"
-import { ReporteMap } from "@/components/reporte-map"
-import { ExportarCsv } from "@/components/exportar-csv"
-import { DetalleReporte } from "@/components/detalle-reporte"
+import type { CentroAcopio, Reporte } from "@/lib/types"
+import { ReportesPanel } from "@/components/reportes-panel"
 
 // Datos en vivo — no se debe congelar en el build.
 export const dynamic = "force-dynamic"
 
-const URGENCIA_ESTILO: Record<Reporte["urgencia"], { bg: string; color: string; label: string }> = {
-  alta: { bg: "#FCEBEB", color: "#791F1F", label: "Alta" },
-  media: { bg: "#FAEEDA", color: "#633806", label: "Media" },
-  baja: { bg: "#E1F5EE", color: "#085041", label: "Baja" },
-}
-
 export default async function ReportesPage() {
-  // Las tres consultas son independientes: se lanzan en paralelo.
-  const [
-    { data, error },
-    { data: reportesMapaData, error: errorMapa },
-    { data: acopiosData, error: errorAcopios },
-  ] = await Promise.all([
-    // Se consulta la tabla base (no la vista mapa_reportes) para la tabla y el
-    // CSV: esa vista excluye reportes sin coordenadas (los remotos) y no
-    // expone "desde_sitio".
+  // Se leen las dos tablas COMPLETAS (todos los estados) con service_role: el panel necesita ver
+  // atendidos y descartados también (para revertirlos, o solo para consultarlos), a diferencia
+  // del mapa público de la app (mapa_reportes), que desde la migración 0008 solo trae 'pendiente'.
+  // Lo mismo para centros_acopio: la app ya lee de la vista centros_acopio_publico (sin
+  // 'inactivo' ni las columnas de verificación); el panel sigue leyendo la tabla completa.
+  const [{ data, error }, { data: acopiosData, error: errorAcopios }] = await Promise.all([
     supabaseAdmin.from("reportes").select("*").order("created_at", { ascending: false }),
-    // Para el mapa sí usamos mapa_reportes: ya viene filtrada a solo los
-    // reportes con coordenadas, que es justo lo que un mapa necesita.
-    supabaseAdmin.from("mapa_reportes").select("*"),
     supabaseAdmin
       .from("centros_acopio")
-      .select("id, nombre, direccion, lat, lng, tipos_material, horario, estado")
-      .eq("estado", "activo"),
+      .select("id, nombre, direccion, lat, lng, tipos_material, horario, estado"),
   ])
 
   const reportes = (data ?? []) as Reporte[]
-  const reportesMapa = (reportesMapaData ?? []) as ReporteMapa[]
   const acopios = (acopiosData ?? []) as CentroAcopio[]
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
+  if (error) {
+    return (
+      <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Reportes</h1>
-        <p className="text-sm text-muted-foreground">
-          Tiraderos clandestinos reportados por la comunidad
-        </p>
+        <p className="text-sm text-destructive">No se pudieron cargar los reportes: {error.message}</p>
       </div>
+    )
+  }
 
-      {errorMapa ? (
-        <p className="text-sm text-destructive">
-          No se pudo cargar el mapa: {errorMapa.message}
-        </p>
-      ) : (
-        <ReporteMap reportes={reportesMapa} acopios={acopios} />
-      )}
+  return (
+    <div className="flex flex-col gap-2">
       {errorAcopios ? (
-        <p className="-mt-3 text-sm text-destructive">
+        <p className="text-sm text-destructive">
           No se pudieron cargar los centros de acopio: {errorAcopios.message}
         </p>
       ) : null}
-
-      {error ? (
-        <p className="text-sm text-destructive">
-          No se pudieron cargar los reportes: {error.message}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-end">
-            <ExportarCsv reportes={reportes} />
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Colonia</TableHead>
-                <TableHead>Tipo de residuo</TableHead>
-                <TableHead>Urgencia</TableHead>
-                <TableHead>Desde sitio</TableHead>
-                <TableHead className="text-right">Detalle</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reportes.map((reporte) => {
-                const urgencia = URGENCIA_ESTILO[reporte.urgencia]
-                return (
-                  <TableRow key={reporte.id}>
-                    <TableCell>
-                      {new Date(reporte.created_at).toLocaleString("es-MX", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                        timeZone: "America/Cancun",
-                      })}
-                    </TableCell>
-                    <TableCell>{reporte.colonia ?? "—"}</TableCell>
-                    <TableCell>{reporte.tipo_residuo ?? "—"}</TableCell>
-                    <TableCell>
-                      <Badge
-                        style={{ backgroundColor: urgencia.bg, color: urgencia.color }}
-                        className="border-transparent"
-                      >
-                        {urgencia.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {reporte.desde_sitio ? (
-                        <Check className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <X className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DetalleReporte
-                        reporte={{
-                          fecha: new Date(reporte.created_at).toLocaleString("es-MX", {
-                            dateStyle: "long",
-                            timeStyle: "short",
-                            timeZone: "America/Cancun",
-                          }),
-                          colonia: reporte.colonia ?? null,
-                          tipoResiduo: reporte.tipo_residuo ?? null,
-                          urgencia: urgencia.label,
-                          desdeSitio: reporte.desde_sitio,
-                          lat: reporte.lat,
-                          lng: reporte.lng,
-                          estado: reporte.estado,
-                          descripcion: reporte.descripcion ?? null,
-                          referenciaLugar: reporte.referencia_lugar ?? null,
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <ReportesPanel reportes={reportes} acopios={acopios} />
     </div>
   )
 }
