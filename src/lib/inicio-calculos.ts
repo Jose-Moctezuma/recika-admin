@@ -28,16 +28,13 @@ const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "s
 export const RESPUESTAS_ENTERADO = ["Ya lo conocía", "Me lo dijeron", "Lo vi en esta app"]
 
 const TOP_COLONIAS = 5
-const TOP_POR_REVISAR = 5
 
-// Solo lo que la pantalla necesita de cada reporte. A propósito NO hay user_id, descripcion ni
-// referencia_lugar: ni se leen de la base ni pueden terminar en esta pantalla.
+// Solo lo que los cálculos del periodo necesitan de cada reporte. A propósito NO hay user_id,
+// descripcion ni referencia_lugar: ni se leen de la base ni pueden terminar en esta pantalla.
 export interface FilaReporte {
-  id: string
   created_at: string
   estado: string | null
   colonia: string | null
-  tipo_residuo: string | null
   como_se_entero: string | null
 }
 
@@ -144,7 +141,6 @@ export interface PendienteReciente {
 export interface ResumenInicio {
   recibidos: number
   hoy: number
-  pendientes: number
   atendidos: number
   descartados: number
   porDia: PuntoPorDia[]
@@ -159,13 +155,6 @@ export interface ResumenInicio {
   // Colonias que quedaron fuera del top por empatar con la última del top.
   coloniasEmpatadasFuera: number
   reportesColoniaOtra: number
-  porRevisar: PendienteReciente[]
-}
-
-// Mismo criterio que el panel de Reportes: lo que no es atendido ni descartado cuenta como
-// pendiente (así también se lee bien una base a la que aún no se le aplicó la migración 0008).
-function estadoNormalizado(estado: string | null): "pendiente" | "atendido" | "descartado" {
-  return estado === "atendido" || estado === "descartado" ? estado : "pendiente"
 }
 
 function esColoniaOtra(colonia: string): boolean {
@@ -174,7 +163,6 @@ function esColoniaOtra(colonia: string): boolean {
 
 export function calcularResumen(filas: FilaReporte[], rango: RangoPeriodo): ResumenInicio {
   let hoy = 0
-  let pendientes = 0
   let atendidos = 0
   let descartados = 0
   let reportesColoniaOtra = 0
@@ -188,10 +176,9 @@ export function calcularResumen(filas: FilaReporte[], rango: RangoPeriodo): Resu
     porDiaConteo.set(dia, (porDiaConteo.get(dia) ?? 0) + 1)
     if (dia === rango.hoy) hoy++
 
-    const estado = estadoNormalizado(fila.estado)
-    if (estado === "pendiente") pendientes++
-    else if (estado === "atendido") atendidos++
-    else descartados++
+    // "Pendiente" NO se cuenta aquí: es un estado actual, no del periodo (ver lib/pendientes.ts).
+    if (fila.estado === "atendido") atendidos++
+    else if (fila.estado === "descartado") descartados++
 
     const respuesta = fila.como_se_entero?.trim() ?? ""
     if (respuesta === "") sinRespuesta++
@@ -238,21 +225,9 @@ export function calcularResumen(filas: FilaReporte[], rango: RangoPeriodo): Resu
     ? ordenadas.slice(TOP_COLONIAS).filter(([, total]) => total === ultimaDelTop.total).length
     : 0
 
-  const porRevisar = filas
-    .filter((fila) => estadoNormalizado(fila.estado) === "pendiente")
-    .sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0))
-    .slice(0, TOP_POR_REVISAR)
-    .map((fila) => ({
-      id: fila.id,
-      tipo_residuo: fila.tipo_residuo?.trim() || "Reporte",
-      colonia: fila.colonia?.trim() || "Sin colonia",
-      created_at: fila.created_at,
-    }))
-
   return {
     recibidos: filas.length,
     hoy,
-    pendientes,
     atendidos,
     descartados,
     porDia,
@@ -264,6 +239,5 @@ export function calcularResumen(filas: FilaReporte[], rango: RangoPeriodo): Resu
     coloniasConReportes: coloniaConteo.size,
     coloniasEmpatadasFuera,
     reportesColoniaOtra,
-    porRevisar,
   }
 }

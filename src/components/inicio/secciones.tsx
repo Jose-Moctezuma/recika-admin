@@ -205,12 +205,17 @@ export function ColoniasConMasReportes({
   )
 }
 
-export function PorRevisar({ pendientes }: { pendientes: PendienteReciente[] }) {
+// Los pendientes son un estado actual: esta lista NO depende del periodo elegido.
+export function PorRevisar({ pendientes, error }: { pendientes: PendienteReciente[]; error?: string }) {
   return (
     <Tarjeta className="gap-3.5">
       <Titulo accion={<Enlace href="/reportes">Abrir reportes</Enlace>}>Por revisar</Titulo>
-      {pendientes.length === 0 ? (
-        <Vacio>No hay reportes por revisar en este periodo</Vacio>
+      {error ? (
+        <p className="py-6 text-center text-sm" style={{ color: colors.rp }}>
+          No se pudieron cargar los pendientes: {error}
+        </p>
+      ) : pendientes.length === 0 ? (
+        <Vacio>No hay reportes por revisar</Vacio>
       ) : (
         <ul className="flex flex-col">
           {pendientes.map((p, i) => (

@@ -1,9 +1,11 @@
 import "server-only"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { contarPendientes, leerPendientesRecientes } from "@/lib/pendientes"
 import {
   calcularResumen,
   rangoPeriodo,
   type FilaReporte,
+  type PendienteReciente,
   type Periodo,
   type RangoPeriodo,
   type ResumenInicio,
@@ -13,7 +15,10 @@ import {
 // solo existe en servidor; ver supabase-admin.ts) porque `reportes` no es legible con la clave
 // anon, y se piden únicamente las columnas que la pantalla usa: nunca user_id, descripcion ni
 // referencia_lugar.
-const COLUMNAS_REPORTE = "id, created_at, estado, colonia, tipo_residuo, como_se_entero"
+const COLUMNAS_REPORTE = "created_at, estado, colonia, como_se_entero"
+
+// Cuántos pendientes recientes lista la tarjeta "Por revisar".
+const PENDIENTES_RECIENTES = 5
 
 // PostgREST devuelve como máximo 1000 filas por consulta (límite del proyecto): se lee por páginas
 // para que "Todo" no se corte en silencio cuando haya más reportes.
@@ -67,20 +72,38 @@ async function leerLecciones(rango: RangoPeriodo): Promise<LeccionesInicio> {
   return { completadas: resCompletadas.count, activas: resActivas.count, error }
 }
 
+// Estado ACTUAL de la cola de revisión: no depende del periodo elegido.
+export interface PendientesInicio {
+  total: number | null
+  recientes: PendienteReciente[]
+  error?: string
+}
+
 export interface DatosInicio {
   rango: RangoPeriodo
   resumen: ResumenInicio | null
   errorReportes?: string
+  pendientes: PendientesInicio
   lecciones: LeccionesInicio
 }
 
 export async function cargarInicio(periodo: Periodo): Promise<DatosInicio> {
   const rango = rangoPeriodo(periodo, new Date())
-  const [reportes, lecciones] = await Promise.all([leerReportes(rango), leerLecciones(rango)])
+  const [reportes, lecciones, total, recientes] = await Promise.all([
+    leerReportes(rango),
+    leerLecciones(rango),
+    contarPendientes(),
+    leerPendientesRecientes(PENDIENTES_RECIENTES),
+  ])
   return {
     rango,
     resumen: reportes.error ? null : calcularResumen(reportes.filas, rango),
     errorReportes: reportes.error,
+    pendientes: {
+      total: total.total,
+      recientes: recientes.filas,
+      error: total.error ?? recientes.error,
+    },
     lecciones,
   }
 }

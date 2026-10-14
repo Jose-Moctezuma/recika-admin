@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { ConditionalNav } from "@/components/conditional-nav";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { contarPendientes } from "@/lib/pendientes";
 import { colors } from "@/lib/theme";
 import "./globals.css";
 
@@ -24,12 +24,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Para el contador de "Reportes" en el menú lateral. Se calcula aquí (Server Component) y
-  // se pasa como prop porque el menú es un Client Component (usePathname); si falla (p. ej. la
-  // migración 0008 aún no corrió) no se rompe el layout, solo no se muestra el contador.
-  const { count } = await supabaseAdmin
-    .from("reportes")
-    .select("*", { count: "exact", head: true })
-    .eq("estado", "pendiente");
+  // se pasa como prop porque el menú es un Client Component (usePathname). Sale de la misma
+  // función que la tarjeta "Por revisar" de Inicio, así que siempre coinciden; si falla no se
+  // rompe el layout, solo no se muestra el contador.
+  const { total: pendientes } = await contarPendientes();
 
   return (
     <html
@@ -37,7 +35,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex h-full min-h-screen font-sans" style={{ backgroundColor: colors.fondo }}>
-        <ConditionalNav reportesPendientes={count ?? null} />
+        <ConditionalNav reportesPendientes={pendientes} />
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </body>
     </html>

@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic"
 
 export default async function InicioPage({ searchParams }: PageProps<"/">) {
   const periodo = leerPeriodo((await searchParams).periodo)
-  const { resumen, errorReportes, lecciones } = await cargarInicio(periodo)
+  const { resumen, errorReportes, pendientes, lecciones } = await cargarInicio(periodo)
   const etiquetaPeriodo = PERIODOS.find((p) => p.valor === periodo)?.etiqueta ?? ""
 
   return (
@@ -60,7 +60,9 @@ export default async function InicioPage({ searchParams }: PageProps<"/">) {
         />
         <Cifra
           etiqueta="Por revisar"
-          valor={resumen?.pendientes ?? null}
+          // Estado actual: cuenta TODOS los pendientes, sin importar el periodo (igual que el menú).
+          valor={pendientes.total}
+          error={pendientes.error}
           color={colors.rme}
           pie={<Enlace href="/reportes">Ir a reportes pendientes</Enlace>}
         />
@@ -78,42 +80,42 @@ export default async function InicioPage({ searchParams }: PageProps<"/">) {
       </div>
 
       {resumen ? (
-        <>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <Tarjeta className="lg:col-span-2">
-              <Titulo
-                accion={
-                  <span className="text-xs" style={{ color: colors.texto2 }}>
-                    {etiquetaPeriodo}
-                  </span>
-                }
-              >
-                Reportes por día
-              </Titulo>
-              {resumen.recibidos === 0 ? (
-                <Vacio>Aún no hay reportes en este periodo</Vacio>
-              ) : (
-                <GraficaPorDia datos={resumen.porDia} maximo={resumen.maximoPorDia} />
-              )}
-            </Tarjeta>
-            <ComoSeEnteraron
-              respuestas={resumen.enterados}
-              totalRespondieron={resumen.totalRespondieron}
-              sinRespuesta={resumen.sinRespuesta}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ColoniasConMasReportes
-              ranking={resumen.ranking}
-              coloniasConReportes={resumen.coloniasConReportes}
-              coloniasEmpatadasFuera={resumen.coloniasEmpatadasFuera}
-              reportesColoniaOtra={resumen.reportesColoniaOtra}
-            />
-            <PorRevisar pendientes={resumen.porRevisar} />
-          </div>
-        </>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Tarjeta className="lg:col-span-2">
+            <Titulo
+              accion={
+                <span className="text-xs" style={{ color: colors.texto2 }}>
+                  {etiquetaPeriodo}
+                </span>
+              }
+            >
+              Reportes por día
+            </Titulo>
+            {resumen.recibidos === 0 ? (
+              <Vacio>Aún no hay reportes en este periodo</Vacio>
+            ) : (
+              <GraficaPorDia datos={resumen.porDia} maximo={resumen.maximoPorDia} />
+            )}
+          </Tarjeta>
+          <ComoSeEnteraron
+            respuestas={resumen.enterados}
+            totalRespondieron={resumen.totalRespondieron}
+            sinRespuesta={resumen.sinRespuesta}
+          />
+        </div>
       ) : null}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {resumen ? (
+          <ColoniasConMasReportes
+            ranking={resumen.ranking}
+            coloniasConReportes={resumen.coloniasConReportes}
+            coloniasEmpatadasFuera={resumen.coloniasEmpatadasFuera}
+            reportesColoniaOtra={resumen.reportesColoniaOtra}
+          />
+        ) : null}
+        <PorRevisar pendientes={pendientes.recientes} error={pendientes.error} />
+      </div>
     </div>
   )
 }
