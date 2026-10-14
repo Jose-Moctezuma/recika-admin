@@ -21,6 +21,14 @@ export function fechaTabla(iso: string): string {
   return `${dia} ${mes} · ${hora}`
 }
 
+// "5 oct 2026" a partir de una fecha sin hora ("2026-10-05", como la columna `date` de Postgres).
+// No pasa por Date: así la zona horaria no puede correr el día.
+export function fechaSoloDia(ymd: string): string {
+  const m = ymd.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return ymd
+  return `${Number(m[3])} ${MESES_CORTOS[Number(m[2]) - 1]} ${m[1]}`
+}
+
 // "27 sep 2026, 23:43" (encabezado del detalle).
 export function fechaDetalle(iso: string): string {
   const { dia, mes, anio, hora } = partes(iso)

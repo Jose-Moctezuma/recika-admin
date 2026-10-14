@@ -32,20 +32,27 @@ export interface Reporte {
 export interface Colonia {
   id: string
   nombre: string
-  // text[] en Supabase (ver supabase/migrations/0001_init.sql), no string.
+  // text[] en Supabase (ver supabase/migrations/0001_init.sql), no string: nombres completos en
+  // minúscula y con acento ("martes", "miércoles", "sábado"), en orden lunes -> domingo.
   dias_recoleccion: string[]
-  horario: string
-  ruta_numero: number
+  // Texto "H:MM - H:MM" (p. ej. "8:00 - 11:00"); null si no hay.
+  horario: string | null
+  ruta_numero: number | null
+  // false = oculta: la app no la lista (en la base no se borra).
+  activa: boolean
+  // Centro de la colonia para sugerirla por GPS (migración 0007). El panel no los edita.
+  centro_lat?: number | null
+  centro_lng?: number | null
 }
 
 export interface CentroAcopio {
   id: string
   nombre: string
-  direccion: string
+  direccion: string | null
   lat: number
   lng: number
   tipos_material: string[]
-  horario: string
+  horario: string | null
   // 'activo' | 'sin_servicio' | 'inactivo' (migración 0008). 'inactivo' nunca llega a la app
   // (centros_acopio_publico lo excluye); 'sin_servicio' sí, con su etiqueta gris.
   estado: string

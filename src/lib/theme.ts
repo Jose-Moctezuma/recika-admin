@@ -50,6 +50,8 @@ export const MOTIVO_DESCARTE_LABEL: Record<"falso" | "duplicado" | "prueba", str
 // en la app). Aquí, en el panel, se muestran los tres para poder gestionarlos.
 export const estiloEstadoAcopio: Record<"activo" | "sin_servicio" | "inactivo", { bg: string; fg: string; label: string }> = {
   activo: { bg: colors.rsuBg, fg: colors.rsu, label: "Activo" },
-  sin_servicio: { bg: colors.surface3, fg: colors.texto2, label: "Temporalmente sin servicio" },
-  inactivo: { bg: colors.rpBg, fg: colors.rp, label: "Inactivo" },
+  // Gris claro: en la app sale como "Temporalmente sin servicio"; en la tabla del panel, abreviado.
+  sin_servicio: { bg: colors.surface3, fg: colors.texto2, label: "Sin servicio" },
+  // Gris oscuro: ya no se ve en la app (se desactivó), pero el registro se conserva.
+  inactivo: { bg: colors.texto2, fg: "#FFFFFF", label: "Inactivo" },
 };
