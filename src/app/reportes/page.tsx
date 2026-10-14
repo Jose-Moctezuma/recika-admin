@@ -30,14 +30,7 @@ export default async function ReportesPage() {
     )
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      {errorAcopios ? (
-        <p className="text-sm text-destructive">
-          No se pudieron cargar los centros de acopio: {errorAcopios.message}
-        </p>
-      ) : null}
-      <ReportesPanel reportes={reportes} acopios={acopios} />
-    </div>
-  )
+  // El panel ocupa todo el alto de la pantalla (columna de detalle fija a la derecha), así que
+  // se renderiza sin envoltorio; el aviso de error de acopios va dentro de su columna izquierda.
+  return <ReportesPanel reportes={reportes} acopios={acopios} errorAcopios={errorAcopios?.message} />
 }

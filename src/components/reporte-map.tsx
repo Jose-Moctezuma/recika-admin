@@ -13,8 +13,8 @@ const ReporteMapInner = dynamic(
     ssr: false,
     loading: () => (
       <div
-        style={{ height: 400 }}
-        className="flex items-center justify-center rounded-xl border bg-muted/30 text-sm text-muted-foreground"
+        style={{ height: 270 }}
+        className="flex items-center justify-center rounded-[16px] border bg-muted/30 text-sm text-muted-foreground"
       >
         Cargando mapa…
       </div>

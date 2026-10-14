@@ -12,7 +12,7 @@ import {
 export function Tarjeta({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <section
-      className={`flex flex-col gap-4 rounded-2xl border bg-white p-5 sm:p-[22px] ${className}`}
+      className={`flex flex-col gap-4 rounded-[16px] border bg-white p-5 sm:p-[22px] ${className}`}
       style={{ borderColor: colors.borde }}
     >
       {children}
@@ -64,7 +64,7 @@ export function Cifra({
 }) {
   return (
     <div
-      className="flex flex-col gap-2 rounded-2xl border bg-white p-5"
+      className="flex flex-col gap-2 rounded-[16px] border bg-white p-5"
       style={{ borderColor: colors.borde }}
     >
       <div className="text-[13px] font-semibold" style={{ color: colors.texto2 }}>

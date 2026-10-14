@@ -4,6 +4,7 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import type { CentroAcopio, ReporteMapa } from "@/lib/types"
+import { colors } from "@/lib/theme"
 
 // El problema clásico de Leaflet + bundlers: el ícono default apunta a rutas
 // relativas que no existen tras el empaquetado. Se corrige apuntando a los
@@ -17,13 +18,14 @@ L.Icon.Default.mergeOptions({
 
 const CHETUMAL_CENTRO: [number, number] = [18.5001, -88.2963]
 
+// Mismos colores que la leyenda de la maqueta (docs/panel-v2/2-Reportes.html).
 const COLOR_URGENCIA: Record<ReporteMapa["urgencia"], string> = {
-  alta: "#E24B4A",
-  media: "#BA7517",
-  baja: "#1D9E75",
+  alta: colors.rp,
+  media: colors.ambarPendiente,
+  baja: colors.selva,
 }
 
-const COLOR_ACOPIO = "#085041"
+const COLOR_ACOPIO = colors.manglar
 
 const LABEL_URGENCIA: Record<ReporteMapa["urgencia"], string> = {
   alta: "Alta",
@@ -66,29 +68,34 @@ const iconoAcopio = L.divIcon({
   popupAnchor: [0, -9],
 })
 
+// Leyenda DENTRO del mapa, abajo a la izquierda, en una cajita blanca con borde. z-index 1000:
+// los controles de Leaflet usan hasta 1000 y, sin esto, el mapa taparía la cajita.
 function Leyenda() {
   const item = { display: "flex", alignItems: "center", gap: 6 } as const
+  const punto = (color: string, radio: number) => (
+    <span style={{ width: 10, height: 10, borderRadius: radio, background: color }} aria-hidden="true" />
+  )
   return (
     <div
-      style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginTop: 8, fontSize: 13 }}
-      className="text-muted-foreground"
+      style={{
+        position: "absolute",
+        left: 14,
+        bottom: 12,
+        zIndex: 1000,
+        display: "flex",
+        gap: 14,
+        padding: "8px 12px",
+        fontSize: 12,
+        color: colors.texto,
+        background: "#fff",
+        border: `1px solid ${colors.borde}`,
+        borderRadius: 10,
+      }}
     >
-      <span style={item}>
-        <span
-          style={{ width: 12, height: 12, borderRadius: 9999, background: COLOR_URGENCIA.alta }}
-        />
-        <span
-          style={{ width: 12, height: 12, borderRadius: 9999, background: COLOR_URGENCIA.media }}
-        />
-        <span
-          style={{ width: 12, height: 12, borderRadius: 9999, background: COLOR_URGENCIA.baja }}
-        />
-        Reportes (urgencia alta / media / baja)
-      </span>
-      <span style={item}>
-        <span style={{ width: 12, height: 12, borderRadius: 3, background: COLOR_ACOPIO }} />
-        Centros de acopio
-      </span>
+      <span style={item}>{punto(COLOR_URGENCIA.alta, 9999)}Alta</span>
+      <span style={item}>{punto(COLOR_URGENCIA.media, 9999)}Media</span>
+      <span style={item}>{punto(COLOR_URGENCIA.baja, 9999)}Baja</span>
+      <span style={item}>{punto(COLOR_ACOPIO, 3)}Centro de acopio</span>
     </div>
   )
 }
@@ -101,12 +108,15 @@ export function ReporteMapInner({
   acopios: CentroAcopio[]
 }) {
   return (
-    <>
+    <div
+      className="relative shrink-0 overflow-hidden rounded-[16px] border"
+      style={{ height: 270, borderColor: colors.borde }}
+    >
       <MapContainer
         center={CHETUMAL_CENTRO}
         zoom={13}
         scrollWheelZoom={false}
-        style={{ height: 400, width: "100%", borderRadius: "0.75rem" }}
+        style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -151,6 +161,6 @@ export function ReporteMapInner({
         ))}
       </MapContainer>
       <Leyenda />
-    </>
+    </div>
   )
 }

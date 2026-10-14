@@ -65,7 +65,12 @@ export function ExportarCsv({ reportes }: { reportes: Reporte[] }) {
   }
 
   return (
-    <Button variant="outline" onClick={descargar} disabled={reportes.length === 0}>
+    <Button
+      variant="outline"
+      onClick={descargar}
+      disabled={reportes.length === 0}
+      className="h-[42px] gap-2 rounded-xl px-4 text-sm font-semibold"
+    >
       <Download />
       Exportar CSV
     </Button>
