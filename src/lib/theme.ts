@@ -13,6 +13,8 @@ export const colors = {
   surface3: "#EFEDE7",
   ambarOscuro: "#3A1C08",
   ambarAcento: "#EF9F27",
+  // Punto de "pendiente" en la lista "Por revisar" de Inicio (maqueta panel-v2/1-Inicio.html).
+  ambarPendiente: "#BA7517",
   rsu: "#085041",
   rsuBg: "#E1F5EE",
   rme: "#8A5510",

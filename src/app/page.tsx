@@ -1,79 +1,119 @@
-import { supabaseAdmin } from "@/lib/supabase-admin"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
+import { Download } from "lucide-react"
+import { cargarInicio } from "@/lib/inicio-datos"
+import { PERIODOS, leerPeriodo } from "@/lib/inicio-calculos"
+import { colors } from "@/lib/theme"
+import { GraficaPorDia } from "@/components/inicio/grafica-por-dia"
+import { SelectorPeriodo } from "@/components/inicio/selector-periodo"
+import {
+  ComoSeEnteraron,
+  ColoniasConMasReportes,
+  Cifra,
+  Enlace,
+  PorRevisar,
+  Tarjeta,
+  Titulo,
+  Vacio,
+} from "@/components/inicio/secciones"
 
 // Datos en vivo (conteos/rankings) — no se debe congelar en el build.
 export const dynamic = "force-dynamic"
 
-type Metrica = { etiqueta: string; valor: number | null; error?: string }
-
-async function contarReportesTotal(): Promise<Metrica> {
-  const { count, error } = await supabaseAdmin
-    .from("reportes")
-    .select("*", { count: "exact", head: true })
-  return { etiqueta: "Total de reportes", valor: count, error: error?.message }
-}
-
-async function contarReportesHoy(): Promise<Metrica> {
-  const inicioDelDia = new Date()
-  inicioDelDia.setHours(0, 0, 0, 0)
-
-  const { count, error } = await supabaseAdmin
-    .from("reportes")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", inicioDelDia.toISOString())
-  return { etiqueta: "Reportes hoy", valor: count, error: error?.message }
-}
-
-async function contarColoniasConReportes(): Promise<Metrica> {
-  const { data, error } = await supabaseAdmin.from("ranking_colonias").select("colonia")
-  return { etiqueta: "Colonias con reportes", valor: data?.length ?? null, error: error?.message }
-}
-
-async function contarLeccionesCompletadas(): Promise<Metrica> {
-  const { count, error } = await supabaseAdmin
-    .from("usuarios_progreso")
-    .select("*", { count: "exact", head: true })
-    .eq("completada", true)
-  return { etiqueta: "Lecciones completadas", valor: count, error: error?.message }
-}
-
-export default async function InicioPage() {
-  const metricas = await Promise.all([
-    contarReportesTotal(),
-    contarReportesHoy(),
-    contarColoniasConReportes(),
-    contarLeccionesCompletadas(),
-  ])
+export default async function InicioPage({ searchParams }: PageProps<"/">) {
+  const periodo = leerPeriodo((await searchParams).periodo)
+  const { resumen, errorReportes, lecciones } = await cargarInicio(periodo)
+  const etiquetaPeriodo = PERIODOS.find((p) => p.valor === periodo)?.etiqueta ?? ""
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Inicio</h1>
-        <p className="text-sm text-muted-foreground">
-          Resumen general de ReciKa en Chetumal
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[28px] font-bold tracking-tight">Inicio</h1>
+          <p className="text-sm" style={{ color: colors.texto2 }}>
+            Resumen del piloto de ReciKa en Chetumal
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2.5">
+          <SelectorPeriodo periodo={periodo} />
+          <Link
+            href="/exportar"
+            className="flex h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white"
+            style={{ backgroundColor: colors.manglar }}
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Exportar datos
+          </Link>
+        </div>
+      </header>
+
+      {errorReportes || !resumen ? (
+        <p className="text-sm" style={{ color: colors.rp }}>
+          No se pudieron cargar los reportes: {errorReportes ?? "error desconocido"}
         </p>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Cifra
+          etiqueta="Reportes recibidos"
+          valor={resumen?.recibidos ?? null}
+          pie={`${resumen?.hoy ?? 0} hoy`}
+        />
+        <Cifra
+          etiqueta="Por revisar"
+          valor={resumen?.pendientes ?? null}
+          color={colors.rme}
+          pie={<Enlace href="/reportes">Ir a reportes pendientes</Enlace>}
+        />
+        <Cifra
+          etiqueta="Atendidos"
+          valor={resumen?.atendidos ?? null}
+          pie={`${resumen?.descartados ?? 0} ${resumen?.descartados === 1 ? "descartado" : "descartados"}`}
+        />
+        <Cifra
+          etiqueta="Lecciones completadas"
+          valor={lecciones.completadas}
+          error={lecciones.error}
+          pie={`de ${lecciones.activas ?? "—"} ${lecciones.activas === 1 ? "lección activa" : "lecciones activas"}`}
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metricas.map((metrica) => (
-          <Card key={metrica.etiqueta}>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {metrica.etiqueta}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {metrica.error ? (
-                <p className="text-xs text-destructive">{metrica.error}</p>
+      {resumen ? (
+        <>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <Tarjeta className="lg:col-span-2">
+              <Titulo
+                accion={
+                  <span className="text-xs" style={{ color: colors.texto2 }}>
+                    {etiquetaPeriodo}
+                  </span>
+                }
+              >
+                Reportes por día
+              </Titulo>
+              {resumen.recibidos === 0 ? (
+                <Vacio>Aún no hay reportes en este periodo</Vacio>
               ) : (
-                <p className="text-4xl font-bold" style={{ color: "#085041" }}>
-                  {metrica.valor}
-                </p>
+                <GraficaPorDia datos={resumen.porDia} maximo={resumen.maximoPorDia} />
               )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </Tarjeta>
+            <ComoSeEnteraron
+              respuestas={resumen.enterados}
+              totalRespondieron={resumen.totalRespondieron}
+              sinRespuesta={resumen.sinRespuesta}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <ColoniasConMasReportes
+              ranking={resumen.ranking}
+              coloniasConReportes={resumen.coloniasConReportes}
+              coloniasEmpatadasFuera={resumen.coloniasEmpatadasFuera}
+              reportesColoniaOtra={resumen.reportesColoniaOtra}
+            />
+            <PorRevisar pendientes={resumen.porRevisar} />
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }
